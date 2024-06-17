@@ -1,0 +1,532 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Proyecto de Inflación Global</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="assets/css/main.css" />
+    <style>
+        /* Estilo para el contenido */
+        #content {
+            max-width: 800px; /* Ancho máximo del contenido */
+            margin: 0 auto; /* Centra horizontalmente */
+            padding: 20px; /* Espaciado interno */
+        }
+        /* Estilo para los títulos */
+        h2, h3 {
+            text-align: center; /* Centra horizontalmente */
+        }
+        /* Estilo para el código */
+        pre {
+            overflow-x: auto; /* Permite desplazamiento horizontal si el contenido excede el ancho */
+            white-space: pre-wrap; /* Rompe las líneas largas de código */
+            word-wrap: break-word; /* Rompe palabras largas */
+            padding: 20px; /* Aumenta el espacio alrededor del código */
+        }
+        .subrayado {
+            text-decoration:underline;
+        }
+        .negrita {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Wrapper -->
+<div id="wrapper">
+    <!-- Header -->
+    <header id="header" class="alt">
+        <a href="index.html" class="logo"><strong>Projects</strong> <span>by Diego</span></a>
+    </header>
+
+    <!-- Content -->
+    <div id="content">
+        <!-- Contenido de la sección Inflación -->
+        <section id="Inflación">
+            <div class="inner">
+                <header class="major">
+                    <!-- Título secundario centrado -->
+                    <h2 id="secondary-title">Proyecto de Inflación haciendo uso de Docker-Airbyte-Snowflake.</h2>
+                </header>
+                <!-- Contenido -->
+                <h3>Introducción</h3>
+                <p>En el siguiente proyecto, voy a realizar un proceso de ETL a partir de un CSV que contiene datos sobre la inflación de cada país desde el año 1980 hasta el 2024. El objetivo de dicho proyecto es mostrar la eficiencia de la integración de herramientas como Postgres-Docker-Airbyte-Snowflake.</p>
+                <h3>Pasos del proyecto</h3>
+                <h4 class="subrayado">Primer paso: realizar el proceso de ETL</h4>
+                <p>En mi primer paso es crear una carpeta que contenga toda mi información sobre el proyecto que voy a realizar. Es por ello que a partir del uso del editor de código Visual Studio Code, creo un Jupyter Netbook bajo el nombre “inflation_etl.ipynb”. Al principio de mi cuaderno de Jupyter lo primero es crear mi Configuración de Entorno de esta manera: </p>
+                <img src="images\inflation\pic01.png" alt="i1">
+                <p>Primero actualizo mi pip y luego instalo las bibliotecas que voy a utilizar en mi proyecto (el cual podrán encontrarlo en la carpeta de este que esta en mi github). </p>
+                <p>Lo siguiente es cargar el conjunto de datos desde el archivo CSV utilizando pandas: </p>
+                <img src="images\inflation\pic02.png" alt="i2">
+                <p>Para verificar que se cargó correctamente y a su vez observar las características que presenta el mismo, voy a realizar una Exploración de Datos.</p>
+                <h5 class="subrayado">Exploración de Datos</h5>
+                <p>Lo primero es visualizar como es mi conjunto de datos: </p>
+                <img src="images\inflation\pic03.png" alt="i3">
+                <p>Con esto verificamos que la carga del CSV fue correcta y ahora procedo a analizar los distintos tipos de variables que contiene mi estructura de datos.</p>
+                <p>Lo primero es ver que tipo de dato son las variables del conjunto de datos:</p>
+                <img src="images\inflation\pic04.png" alt="i4">
+                <p>Como se visualiza la mayoria es de tipo float64 y unicamente solo dos de tipo object. Pero también quiero saber cuantos de tipo  float64 tengo, para ello: </p>
+                <img src="images\inflation\pic05.png" alt="i5">
+                <p>Entonces, tengo 45 de tipo float64. Ahora me gustaría saber cuantas filas y columnas tenemos en el conjunto de datos: </p>
+                <img src="images\inflation\pic06.png" alt="i6">
+                <p>Por ende, en el dataframe tengo 196 filas y 47 columnas. Lo siguiente y fundamental es preguntarme si existen valores nulos explícitos en el conjunto de datos: </p>
+                <img src="images\inflation\pic07.png" alt="i7">
+                <p>Como se observa en todas las columnas de tipo float64 se presentan valores nulos. A su vez me interesa saber cuántas variables nulas se presentan en cada una de esas columnas, para ello: </p>
+                <img src="images\inflation\pic08.png" alt="i8">
+                <p>Como se ve, después del año 2000 las variables nulas se hacen menos presentes, no obstante para visualizar de mejor manera la naturaleza de los valores nulos realizo lo siguiente: </p>
+                <img src="images\inflation\pic09.png" alt="i9">
+                <p>Si hacen correr este código, visualizaran el DataFrame mostrando en cada columna como los valores nulos están representados por la palabra NaN. Es por ello que lo que se observa es que la naturaleza de este es producto de distintas causas, algunas son subsecuentes de cambios históricos como en el caso de Ucrania, el cual no se registra datos a partir de 1980 hasta años más adelante producto de la disolución de la Unión Soviética que ocasión que tanto Ucrania como otros países de la U.R.R.S. se formen como estado independiente. También otra naturaleza es debido a mejoras en la recopilación de datos o si los países quisieron compartir dicha información. Por consiguiente no voy a aplicar ninguna acción sobre estos valores nulos. </p>
+                <h5 class="subrayado">Transformación</h5>
+                <p>En el siguiente Subpaso tengo distintos objetivos los cuales son los siguientes: </p>
+                <img src="images\inflation\pic10.png" alt="i10">
+                <p>Para realizar mi primer objetivo:</p>
+                <img src="images\inflation\pic11.png" alt="i11">
+                <p>Voy a escribir el siguiente código el cual me va a permitir crear un nuevo DataFrame que contenga todos los paises y los datos desde el 2000 hasta el 2023. También voy a usar la funcion ‘melt()’ para combinar las columnas de los años en una nueva columna llamada ‘Year’: </p>
+                <img src="images\inflation\pic12.png" alt="i12">
+                <p>A su vez me gustaría cambiar el nombre de las columnas “country_name” por “Country” e “indicator_name” por “Indicator”: </p>
+                <img src="images\inflation\pic13.png" alt="i13">
+                <p>Ahora me toca completar mi segundo objetivo: </p>
+                <img src="images\inflation\pic14.png" alt="i14">
+                <p>El cual es separar los países en distintos Datasets según sus continentes. Dejo abajo los siguientes códigos.</p>
+                <h5 class="negrita">Africa</h5>
+                <pre>
+                    <code>
+country_afr = [ "Algeria", "Angola", "Benin", "Botswana", "Burkina Faso", "Burundi", "Cabo Verde",
+    "Cameroon", "Chad", "Comoros", "Democratic Republic of the Congo", "Djibouti", "Egypt",
+    "Equatorial Guinea", "Eritrea", "Eswatini", "Ethiopia", "Gabon", "Gambia", "Ghana",
+    "Guinea", "Guinea-Bissau", "Ivory Coast", "Kenya", "Lesotho", "Liberia", "Libya",
+    "Madagascar", "Malawi", "Mali", "Mauritania", "Mauritius", "Morocco", "Mozambique",
+    "Namibia", "Niger", "Nigeria", "Rwanda", "Sao Tome and Principe", "Senegal", "Seychelles",
+    "Sierra Leone", "Somalia", "South Africa", "South Sudan", "Sudan", "Tanzania", "Togo",
+    "Tunisia", "Uganda", "Zambia", "Zimbabwe", "North Sudan", "Western Sahara"]
+
+infl_dt_1_afr = infl_dt_1[infl_dt_1['Country'].isin(country_afr)]
+
+infl_dt_1_afr
+                    </code>
+                </pre>
+                <img src="images\inflation\pic15.png" alt="i15">
+                <h5 class="negrita">América</h5>
+                <pre>
+                    <code>
+country_amer = ["Canada", "United States","Mexico", "Greenland", "Bermuda", "Saint Pierre and Miquelon","Belize", "Costa Rica", "El Salvador", "Guatemala", "Honduras", "Nicaragua", "Panama", "Antigua and Barbuda", "Bahamas", "Barbados", "Cuba", "Dominica", "Dominican Republic", "Grenada", "Haiti", "Jamaica", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Trinidad and Tobago", "Puerto Rico", "Turks and Caicos Islands", "Cayman Islands", "British Virgin Islands", "United States Virgin Islands", "Anguilla", "Montserrat","Argentina", "Bolivia", "Brazil", "Chile", "Colombia", "Ecuador", "Guyana", "Paraguay", "Peru", "Suriname", "Uruguay", "Venezuela", "French Gui
+
+infl_dt_1_amer = infl_dt_1[infl_dt_1['Country'].isin(country_amer)]
+
+infl_dt_1_amer
+                    </code>
+                </pre>
+                <img src="images\inflation\pic16.png" alt="i16">
+                <h5 class="negrita">Asia</h5>
+                <pre>
+                    <code>
+country_asia = ["Afghanistan", "Armenia", "Azerbaijan", "Bahrain", "Bangladesh", "Bhutan","Brunei", "Cambodia", "China", "Cyprus", "Georgia", "India", "Indonesia","Iran", "Iraq", "Israel", "Japan", "Jordan", "Kazakhstan", "Kuwait","Kyrgyzstan", "Laos", "Lebanon", "Malaysia", "Maldives", "Mongolia","Myanmar", "Nepal", "North Korea", "Oman", "Pakistan", "Palestine","Philippines", "Qatar", "Saudi Arabia", "Singapore", "South Korea","Sri Lanka", "Syria", "Taiwan", "Tajikistan", "Thailand", "Turkmenistan","United Arab Emirates", "Uzbekistan", "Vietnam", "Ye
+
+infl_dt_1_as = infl_dt_1[infl_dt_1['Country'].isin(country_asia)]
+
+infl_dt_1_as
+                        
+
+                    </code>
+                </pre>
+                <img src="images\inflation\pic17.png" alt="i17">
+                <h5 class="negrita">Europa</h5>
+                <pre>
+                    <code>
+country_eu = ["Albania", "Andorra", "Armenia", "Austria", "Azerbaijan", "Belarus", "Belgium","Bosnia and Herzegovina", "Bulgaria", "Croatia", "Cyprus", "Czech Republic","Denmark", "Estonia", "Finland", "France", "Georgia", "Germany", "Greece","Hungary", "Iceland", "Ireland", "Italy", "Kazakhstan", "Kosovo", "Latvia", "Liechtenstein", "Lithuania", "Luxembourg", "Malta", "Moldova", "Monaco","Montenegro", "Netherlands", "North Macedonia", "Norway", "Poland", "Portugal", "Romania", "Russia", "San Marino", "Serbia", "Slovakia","Slovenia", "Spain", "Sweden", "Switzerland", "Turkey", "Ukraine", "United Kingdom", "Vatican City", "Faroe Islands", "Gibral
+
+infl_dt_1_eu = infl_dt_1[infl_dt_1['Country'].isin(country_eu)]
+
+infl_dt_1_eu
+                    </code>
+                </pre>
+                <img src="images\inflation\pic18.png" alt="i18">
+                <h5 class="negrita">Oceanía</h5>
+                <pre>
+                    <code>
+country_ocean = ["Australia", "Fiji", "Marshall Islands", "Solomon Islands", "Kiribati", "Micronesia", "Nauru", "New Zealand", "Palau", "Papua New Guinea","Samoa", "Tonga", "Tuvalu", "Vanu
+
+infl_dt_1_oc = infl_dt_1[infl_dt_1['Country'].isin(country_ocean)]
+
+infl_dt_1_oc
+                    </code>
+                </pre>
+                <img src="images\inflation\pic19.png" alt="i19">
+                <p>Ahora en mi tercer objetivo:</p>
+                <img src="images\inflation\pic20.png" alt="i20">
+                <p>Para ello escribo el siguiente código el cual me permita crear la nueva columna y a su vez, guarde esa información de cada continente en nuevos datasets el cual posteriormente se guardaron en un CSV en la carpeta con el mismo nombre</p>
+                <pre>
+                    <code>
+# Africa
+
+infl_dt_1_afr['Continent'] = 'AFR'
+
+df_infl_dt_afr = pd.DataFrame(infl_dt_1_afr)
+
+df_infl_dt_afr.to_csv('./csv/infl_dt_afr.csv')
+
+# AMERICA
+
+infl_dt_1_amer['Continent'] = 'AMER'
+
+df_infl_dt_amer = pd.DataFrame(infl_dt_1_amer)
+
+df_infl_dt_amer.to_csv('./csv/infl_dt_amer.csv')
+
+# ASIA
+
+infl_dt_1_as['Continent'] = 'AS'
+
+df_infl_dt_as = pd.DataFrame(infl_dt_1_as)
+
+df_infl_dt_as.to_csv('./csv/infl_dt_as.csv')
+
+# EUROPA
+
+infl_dt_1_eu['Continent'] = 'EU'
+
+df_infl_dt_eu = pd.DataFrame(infl_dt_1_eu)
+
+df_infl_dt_eu.to_csv('./csv/infl_dt_eu.csv')
+
+# OCEANIA
+
+infl_dt_1_oc['Continent'] = 'OC'
+
+df_infl_dt_oc = pd.DataFrame(infl_dt_1_oc)
+
+df_infl_dt_oc.to_csv('./csv/infl_dt_oc.csv')
+                    </code>
+                </pre>
+                <p>Ahora en mi último objetivo</p>
+                <img src="images\inflation\pic21.png" alt="i21">
+                <p>Voy a unir esos datasets en uno nuevo, para ello creo una nueva lista llamada “data_frames” que contendrá todos mis DataFrames creados anteriormente, y luego los combino en un mismo DataFrame.</p>
+                <pre>
+                    <code>
+# Creo una lista llamada data_frames que contendra todos mis DataFrames cr
+
+data_frames = [df_infl_dt_afr, df_infl_dt_amer, df_infl_dt_as, df_infl_dt_eu, df_infl_dt_oc]
+
+# Combino todos los DataFrames en uno solo
+
+inflation_data = pd.concat(data_frames, ignore_index= True)
+
+inflation_data
+                    </code>
+                </pre>
+                <h5 class="subrayado">Carga</h5>
+                <p>En mi último paso de mi proceso de ETL tengo que realizar la carga del CSV que contendrá la información de todas las transformaciones que realice en mi CSV original. Para ello, guardo el DataFrame que cree anteriormente en un nuevo CSV con destino en la carpeta de dicho nombre.</p>
+                <pre>
+                    <code>
+df = pd.DataFrame(inflation_data)
+df.to_csv('./csv/inflation_data.csv')                        
+                    </code>
+                </pre>
+
+                <h4 class="subrayado">Segundo paso: desplegar postgres a través de Docker.</h4>
+                <p>En este paso voy a crear un archivo “.yml” bajo el nombre “postgres_docker.yml”. </p>
+                <img src="images\inflation\pic22.png" alt="i22">
+                <p>Este archivo contiene la configuración para desplegar un contenedor de PostgreSQL utilizando Docker Compose. El código en el archivo YAML define cómo se creara y configurara el contenedor de PostgreSQL, incluyendo detalles como la imagen de Docker a utilizar “postgres:latest”, el nombre del contenedor, la configuración de las variables de entorno (como la contraseña de la base de datos), los puertos que se expondrán, y los volúmenes que se montarán. A continuación presento el código que esta dentro del archivo mencionado</p>
+                <pre>
+                    <code>
+                        version: '3.1'
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: inflation_postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: admin
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - /c/Users/roble/OneDrive/Escritorio/pr/inflation_rate_project/csv:/inflation_csv
+  
+volumes:
+  pgdata:
+
+                    </code>
+                </pre>
+                <p>Ahora en la terminal de mi editor de código, escribo el siguiente comando. </p>
+                <img src="images\inflation\pic23.png" alt="i23">
+                <p>Esto me permitirá iniciar los servicios definidos en el archivo anteriormente mencionado utilizando Docker Compose, y ejecutarlos en segundo plano. Por ende, esto iniciará el contenedor de PostgreSQL definido en el archivo YAML. Ahora nos metemos en Docker y buscamos el contenedor creado. Dentro del mismo utilizo su terminal para conectarme a postgres bajo el comando:</p>
+                <pre>
+                    <code>
+psql -U postgres
+                    </code>
+                </pre>
+                <img src="images\inflation\pic24.png" alt="i24">
+                <p>Una vez dentro, creo un database:</p>
+                <pre>
+                    <code>
+CREATE DATABASE INFLATION_GLOBAL;
+                    </code>
+                </pre>
+                <img src="images\inflation\pic25.png" alt="i25">
+                <p>Con nuestra Database creada, solo nos toca crear nuestras dos tablas que contendrán por un lado información de la inflación a nivel global y otra a nivel continental. Entonces, ingresamos a nuestra database:</p>  
+                <pre>
+                    <code>
+\c inflation_global;
+                    </code>
+                </pre>
+                <img src="images\inflation\pic26.png" alt="i26">
+                <p>Una vez dentro, creamos la tabla para la inflación global:</p>
+                <pre>
+                    <code>
+CREATE TABLE infl_global (
+    Id SERIAL PRIMARY KEY, 
+    Country VARCHAR(255),
+    Indicator VARCHAR(50),
+    Year INT,
+    Inflation FLOAT,
+    Continent VARCHAR(255)
+);
+                    </code>
+                </pre>
+                <img src="images\inflation\pic27.png" alt="i27">
+                <p>Ahora que cree la tabla, coloco la información respectiva dentro de la misma. Dicha información esta contenida en el CSV “inflation_data.csv”</p>
+                <pre>
+                    <code>
+\COPY infl_global FROM ‘./inflation_csv/inflation_data.csv’ DELIMITER ‘,’ CSV HEADER;
+                    </code>
+                </pre>
+                <img src="images\inflation\pic28.png" alt="i28">
+                <p>Una vez que cree la tabla para la inflación a nivel global y cargue su respectiva información, voy a desconectarme del database para volver al principio de la terminal de postgres con el fin, de crear otro database bajo el nombre “inflation_continent”. Entonces el código para crear el nuevo database y a su vez conectarme:</p>
+                <pre>
+                    <code>
+CREATE DATABASE INFLATION_CONTINENT;
+                    </code>
+                    <code>
+\c inflation_continent;
+                    </code>
+                </pre>
+                <img src="images\inflation\pic29.png" alt="i29">
+                <p>Además vez voy a crear varias tablas con el nombre de los continentes y cargare su información respectiva.</p>
+                <p>Entonces voy a escribir los siguientes códigos para la creación de las tablas: </p>
+                <pre>
+                    <code>
+CREATE TABLE inflation_africa (
+    Id SERIAL PRIMARY KEY, 
+    Country VARCHAR(255),
+    Indicator VARCHAR(50),
+    Year INT,
+    Inflation FLOAT,
+    Continent VARCHAR(255)
+);
+CREATE TABLE inflation_america (
+    Id SERIAL PRIMARY KEY, 
+    Country VARCHAR(255),
+    Indicator VARCHAR(50),
+    Year INT,
+    Inflation FLOAT,
+    Continent VARCHAR(255)
+)
+CREATE TABLE inflation_asia (
+    Id SERIAL PRIMARY KEY, 
+    Country VARCHAR(255),
+    Indicator VARCHAR(50),
+    Year INT,
+    Inflation FLOAT,
+    Continent VARCHAR(255)
+)
+CREATE TABLE inflation_europa (
+    Id SERIAL PRIMARY KEY, 
+    Country VARCHAR(255),
+    Indicator VARCHAR(50),
+    Year INT,
+    Inflation FLOAT,
+    Continent VARCHAR(255)
+)
+CREATE TABLE inflation_oceania (
+    Id SERIAL PRIMARY KEY, 
+    Country VARCHAR(255),
+    Indicator VARCHAR(50),
+    Year INT,
+    Inflation FLOAT,
+    Continent VARCHAR(255)
+);
+
+                    </code>
+                </pre>
+                <p>Una vez creada las tablas escribo los siguientes códigos para cargar la información respectiva a cada una</p>
+                <pre>
+                    <code>
+\COPY inflation_africa FROM ‘./inflation_csv/infl_dt_afr.csv’ DELIMITER ‘,’ CSV HEADER;
+
+\COPY inflation_america FROM ‘./inflation_csv/infl_dt_amer.csv’ DELIMITER ‘,’ CSV HEADER;
+
+\COPY inflation_asia FROM ‘./inflation_csv/infl_dt_as.csv’ DELIMITER ‘,’ CSV HEADER;
+
+\COPY inflation_europa FROM ‘./inflation_csv/infl_dt_eu.csv’ DELIMITER ‘,’ CSV HEADER;
+
+\COPY inflation_oceania FROM ‘./inflation_csv/infl_dt_oc.csv’ DELIMITER ‘,’ CSV HEADER;
+
+                    </code>
+                </pre>
+                <p>Así queda finalizado este segundo paso donde a través de postgres cree los database con sus tablas e información respectiva. </p>
+                <h4 class="subrayado">Tercer paso: preparar Snowflake para nuestra conexión con Airbyte.</h4>
+                <p>Ahora voy a utilizar la herramienta Snowflake para que los datos que más adelante se transfieran a través de Airbyte queden en las distintas tablas de los databases que voy a crear en esta herramienta. Para ello lo primero es ingresar a su <a href="https://www.snowflake.com/es/">página principal</a>.</p>
+                <img src="images\inflation\pic30.png" alt="i30">
+                <p>Snowflake nos ofrece una cuenta gratis por 30 dias ideal para hacer proyectos. </p>
+                <img src="images\inflation\pic31(1).png" alt="i31">
+                <p>Ingreso mis datos y hago click en continuar. Inmediatamente Snowflake me enviará un email con varios datos importantes, pero el que más importa es el siguiente: </p>
+                <img src="images\inflation\pic32.png" alt="i32">
+                <p>Lo que esta subrayado en rojo es un enlace que más adelante voy a usar.</p> 
+                <p>Volviendo a la página de Snowflake, voy a ingresar a mi cuenta de Snowflake y observaré el siguiente apartado: </p>
+                <img src="images\inflation\pic33.png" alt="i33">
+                <p>Hago click en: </p>
+                <img src="images\inflation\pic34.png" alt="i34">
+                <p>Y copio el siguiente código que me proporciona la pagina de Airbyte para configurar nuestra conexión con Snowflake. Si les interesa leerlo les dejo el siguiente <a href="https://airbyte.com/how-to-sync/postgresql-to-snowflake-data-cloud">enlace.</a></p>
+                <pre>
+                    <code>
+-- set variables (these need to be uppercase)
+set airbyte_role = 'AIRBYTE_ROLE';
+set airbyte_username = 'AIRBYTE_USER';
+set airbyte_warehouse = 'AIRBYTE_WAREHOUSE';
+set airbyte_database = 'AIRBYTE_DATABASE';
+set airbyte_schema = 'AIRBYTE_SCHEMA';
+
+-- set user password
+set airbyte_password ='YOUR_AIRBYTE_PASSWORD';
+
+begin;
+
+-- create Airbyte role
+use role securityadmin;
+create role if not exists identifier($airbyte_role);
+grant role identifier($airbyte_role) to role SYSADMIN;
+
+-- create Airbyte user
+create user if not exists identifier($airbyte_username)
+password = $airbyte_password
+default_role = $airbyte_role
+default_warehouse = $airbyte_warehouse;
+
+grant role identifier($airbyte_role) to user identifier($airbyte_username);
+
+-- change role to sysadmin for warehouse/database steps
+use role sysadmin;
+
+-- create Airbyte warehouse
+create warehouse if not exists identifier($airbyte_warehouse)
+warehouse_size = xsmall
+warehouse_type = standard
+auto_suspend = 60
+auto_resume = true
+initially_suspended = true;
+
+-- create Airbyte database
+create database if not exists identifier($airbyte_database);
+
+-- grant Airbyte warehouse access
+grant USAGE
+on warehouse identifier($airbyte_warehouse)
+to role identifier($airbyte_role);
+
+-- grant Airbyte database access
+grant OWNERSHIP
+on database identifier($airbyte_database)
+to role identifier($airbyte_role);
+
+commit;
+
+begin;
+
+USE DATABASE identifier($airbyte_database);
+
+-- create schema for Airbyte data
+CREATE SCHEMA IF NOT EXISTS identifier($airbyte_schema);
+
+commit;
+
+begin;
+
+-- grant Airbyte schema access
+grant OWNERSHIP
+on schema identifier($airbyte_schema)
+to role identifier($airbyte_role);
+
+commit;
+                        
+                    </code>
+                </pre>
+                <p>Esta línea de código de Airbyte me proporciona un script para ejecutar esta automatización. Por mi parte, modifique las primeras líneas que vera en la imagen de abajo, creando mi database, usuario, y los schema que más adelante me servirán para producir la sincronización. </p>
+                <img src="images\inflation\pic35.png" alt="i35">
+                <p>Una vez que realice los cambios pertinentes ejecuto el script. </p>
+                <h4 class="subrayado">Cuarto paso: Conexión con Airbyte.</h4>
+                <p>Para conectarme a Airbyte lo único que tengo que realizar es descargarme a través de GitHub su repositorio. Para ello, ingresamos en la siguiente <a href="https://github.com/airbytehq/airbyte">página.</a> </p>
+                <p>Y procedo a descargarlo manualmente o a través de GitHub. Si es a través de GitHub, primero ingresamos a esta aplicación y dentro de ahí nos dirigimos a nuestra carpeta del proyecto. Una vez dentro escribimos lo siguiente:</p>
+                <pre>
+                    <code>
+git clone --depth=1 https://github.com/airbytehq/airbyte.git
+                    </code>
+                </pre>
+                <p>Una vez que se me descargue el repositorio, me dirigo a la carpeta</p>
+                <pre>
+                    <code>
+cd airbyte
+                    </code>
+                </pre>
+                <p>Y ahora escribo lo siguiente:</p>
+                <pre>
+                    <code>
+bash run-ab-platform.sh
+                    </code>
+                </pre>
+                <img src="images\inflation\pic36.png" alt="i36">
+                <p>Esto generara que se descarguen varios archivos Docker por sí mismo como también contenedores para que nos pueda ejecutar correctamente la plataforma Airbyte. Como ven, ya tengo los contenedores Airbyte corriendo.</p>
+                <img src="images\inflation\pic37.png" alt="i37">
+                <p>Ahora me dirijo a Google y escribo http://localhost:8000. Esto me llevara a la página de Airbyte en donde me permite realizar las conexiones. Una vez dentro, hago click en el apartado “New connection” </p>
+                <img src="images\inflation\pic38.png" alt="i38">
+                <p>En este apartado me permitirá configurar mi nueva conexión entre mis fuentes de datos y el destino de estos datos. Generalmente, me pedirá que elija mi fuente de datos que deseo conectar, y una vez seleccionada, voy a propiciar los detalles de autenticación y configuración necesario para conectarme a esa fuente de datos. </p>
+                <p>Una vez que la conexión se ha establecido correctamente, voy a configurar la sincronización de datos, programar actualizaciones periódicas y mapear los datos a la estructura adecuada en mi destino de datos. Por ende, empiezo con seleccionar primero mi fuente de datos el cual es postgres.</p>
+                <img src="images\inflation\pic39.png" alt="i39">
+                <p>Una vez elegida me mostrara una serie de configuraciones el cual debo completar usando las siguientes características: </p>
+                <img src="images\inflation\pic40.png" alt="i40">
+                <img src="images\inflation\pic41.png" alt="i41">
+                <p>Una vez escogida nuestra fuente de datos y la configuración de esta, voy a seleccionar el destino de mis datos y su configuración pertinente. Entonces escojo Snowflake</p>
+                <img src="images\inflation\pic42.png" alt="i42">
+                <p>Y su configuración será la siguiente. Recuerden que anteriormente les había mencionado que en el email que Snowflake les envió una vez que nos hemos registrado, había una parte que decía “Dedicated Login URL”. Lo seguido a eso lo copian y lo pegan en la parte que dice “Host” en el formulario de configuración. Ahora tanto Warehouse, como Role, Database, Default_Schema y Username, se encuentra en esta sección:</p>
+                <img src="images\inflation\pic43.png" alt="i43">
+                <p>Solamente tenemos que copiar lo mismo que nos dice en cada sección. Una vez hecho eso, en la parte que menciona “Autorization Method” lo cambiamos por el método “Username and Password” y ahí colocamos la contraseña que configuramos en el script de arriba, en la sección “set airbyte_password”.</p>
+                <img src="images\inflation\pic45.png" alt="i45">
+                <p>Una vez configurado doy a continuar. Y por último me pedira la configuración de la conexión. Para ello, seleccionamos “Schedule type” y lo colocamos en “Manual”. En el apartadod de “Activate the streams you want to sync” observamos nuestro schema que creamos en la terminal de postgres, significa que vas por buen camino. Ahora solo toca en hacer click en “Set up connection”</p>
+                <img src="images\inflation\pic46.png" alt="i46">
+                <p>Una vez hecho la configuración nos pedirá sincronizar ahora los datos con lo cual hacemos click en ello.</p>
+                <img src="images\inflation\pic47.png" alt="i47">
+                <img src="images\inflation\pic48.png" alt="i48">
+                <p>Una vez que se me sincronicen los datos, me dirigo a Snowflake y en el apartado “Database” y seleccionamos nuestro database “Inflation”.  Dentro del mismo encontraremos nuestro schema “INFLATION_GLOBAL” y veremos que está cargado la tabla “INFL_GLOBAL” con toda nuestra información subida.</p>
+                <img src="images\inflation\pic49.png" alt="i49">
+                <img src="images\inflation\pic50.png" alt="i50">
+                <p>Lo último que tengo que realizar ahora es sincronizar nuestros datos de la tabla que contiene la inflación a nivel continental. Entonces desde la página principal de Airbyte nuevamente selecciono “New connection” y copiamos lo siguiente:</p>
+                <img src="images\inflation\pic51.png" alt="i51">
+                <img src="images\inflation\pic52.png" alt="i52">
+                <img src="images\inflation\pic53.png" alt="i53">
+                <p>Ahora copio lo siguiente para configurar nuestra conexión con Snowflake: </p>
+                <img src="images\inflation\pic54.png" alt="i54">
+                <img src="images\inflation\pic55.png" alt="i55">
+                <p>Y por último, configuramos nuestra conexión y seguido, sincronizamos tanto las tablas como su información hacia nuestro schema “INFLATION_GLOBAL” en Snowflake.</p>
+                <img src="images\inflation\pic56.png" alt="i56">
+                <img src="images\inflation\pic57.png" alt="i57">
+                <img src="images\inflation\pic58.png" alt="i58">
+                <img src="images\inflation\pic59.png" alt="i59">
+                <p>Nos dirigimos a Snowflake y verificamos que nuestras tablas como nuestra información se hayan sincronizado.</p>
+                <img src="images\inflation\pic60.png" alt="i60">
+                <p>Como podemos ver hemos terminado el proyecto cumpliendo con el objetivo propuesto al principio. </p>
+                <p>A continuación les dejo el enlace a la carpeta del proyecto a través del <a href="https://github.com/didacus7771/Proyectos_by_Diego_Robledo/tree/main/inflation_rate_project">siguiente enlace</a>, que está situado en GitHub.</p>
+
+
+<!-- Scripts -->
+<script src="assets/js/jquery.min.js"></script>
+<script src="assets/js/jquery.scrolly.min.js"></script>
+<script src="assets/js/jquery.scrollex.min.js"></script>
+<script src="assets/js/browser.min.js"></script>
+<script src="assets/js/breakpoints.min.js"></script>
+<script src="assets/js/util.js"></script>
+<script src="assets/js/main.js"></script>
+
+</body>
+</html>

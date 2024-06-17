@@ -1,0 +1,249 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Proyecto de ETL con YouTube-Airflow</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="assets/css/main.css" />
+    <style>
+        /* Estilo para el contenido */
+        #content {
+            max-width: 800px; /* Ancho máximo del contenido */
+            margin: 0 auto; /* Centra horizontalmente */
+            padding: 20px; /* Espaciado interno */
+        }
+        /* Estilo para los títulos */
+        h2, h3 {
+            text-align: center; /* Centra horizontalmente */
+        }
+        /* Estilo para el código */
+        pre {
+            overflow-x: auto; /* Permite desplazamiento horizontal si el contenido excede el ancho */
+            white-space: pre-wrap; /* Rompe las líneas largas de código */
+            word-wrap: break-word; /* Rompe palabras largas */
+            padding: 20px; /* Aumenta el espacio alrededor del código */
+        }
+        .subrayado {
+            text-decoration:underline;
+        }
+        .negrita {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Wrapper -->
+<div id="wrapper">
+    <!-- Header -->
+    <header id="header" class="alt">
+        <a href="index.html" class="logo"><strong>Projects</strong> <span>by Diego</span></a>
+    </header>
+
+    <!-- Content -->
+    <div id="content">
+        <!-- Contenido de la sección Inflación -->
+        <section id="youtube">
+            <div class="inner">
+                <header class="major">
+                    <!-- Título secundario centrado -->
+                    <h2 id="secondary-title">Proyecto de ETL haciendo uso de YouTube-Airflow.</h2>
+                </header>
+                <!-- Contenido -->
+                <h3>Objetivo</h3>
+                <p>El objetivo del proyecto es aprender a utilizar la API de YouTube para extraer datos de un video con el fin de realizar un proceso de ETL para así, guardarlo en un CSV que luego será subido a través de un pipeline en Apache </p>
+                <h3>Pasos del proyecto</h3>
+                <h4 class="subrayado">Primer paso: Registro en YouTube API y obtención de credenciales.</h4>
+                <p>Lo primero es obtener las credenciales de la API de YouTube, para ello lo primero es ingresar a la <a href="https://console.cloud.google.com/welcome?organizationId=0">Consola de Desarrolladores de Google</a>. </p>
+                <img src="images\youtube\pic01.png" alt="y1">
+                <p>En el panel superior, creamos un nuevo proyecto.</p>
+                <img src="images\youtube\pic02.png" alt="y2">
+                <img src="images\youtube\pic03.png" alt="y2">
+                <p>Ahora nos toca activar la API de YouTube para nuestro proyecto, por ende, en la consola que estuvimos con anterioridad seleccionamos el proyecto recién creado. Luego, nos dirigimos al menú de navegación y seleccionamos API y Servicios, luego “Biblioteca” y buscamos “YouTube Data Api v3”. </p>
+                <img src="images\youtube\pic04.png" alt="y3">
+                <img src="images\youtube\pic05.png" alt="y4">
+                <p>Hacemos click sobre la misma y activamos la API para el proyecto.</p>
+                <p>Por último en este paso, generamos las credenciales (que vendría a ser nuestra Clave API). Esta “API Key” va a ser nuestra cadena única de caracteres que actúa como una especie de contraseña para acceder a los servicios de YouTube. Entonces una vez que obtenemos esta llave, lo almacenamos de forma segura para su posterior uso en mi script de extracción de datos, el cual nos da permiso para realizar operaciones, como en mi caso, obtener información sobre los comentarios del video escogido.</p>
+                <h4 class="subrayado">Segundo paso: Desarrollo del Script de Extracción (yt_etl.py).</h4>
+                <p>En este paso, voy a desarrollar un script Python utilizando Visual Studio Code como editor de código para realizar la extracción de comentarios de videos de YouTube. 
+                    Las bibliotecas que utilice para manipular datos fue pandas y para interactuar con el api de YouTube googleapiclient. 
+                    Ahora sí, el código que utilice fue:
+                    </p>
+                <pre>
+                    <code>
+# Para la estructura del DataFrame
+
+import pandas as pd
+
+# Para interactuar con la API de Youtube
+
+from googleapiclient.discovery import build
+
+
+# Bibliotecas de autenticacion para Google Api
+
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+
+
+# Configurar la clave de API de Youtube
+
+api_key = 'my_key_api'
+
+# Funcion para obtener todos los comentarios de un video
+
+from googleapiclient.discovery import build
+import pandas as pd
+
+def get_video_comments(api_key, video_id):
+    youtube = build('youtube', 'v3', developerKey=api_key)
+
+    users = []
+    comments = []
+    next_page_token = None
+
+    while True:
+        comments_response = youtube.commentThreads().list(
+            part='snippet',
+            videoId=video_id,
+            textFormat='plainText',
+            maxResults=100,
+            pageToken=next_page_token
+        ).execute()
+
+        # Recorrer los comentarios y agregar información del usuario y comentario a las listas
+        for item in comments_response['items']:
+            user_info = item['snippet']['topLevelComment']['snippet']['authorDisplayName']
+            comment_text = item['snippet']['topLevelComment']['snippet']['textDisplay']
+            users.append(user_info)
+            comments.append(comment_text)
+
+        # Verificar si hay más páginas de comentarios
+        next_page_token = comments_response.get('nextPageToken')
+        if not next_page_token:
+            break
+
+    return users, comments  # Devolver dos listas separadas para usuarios y comentarios
+
+if __name__ == "__main__":
+    # Ejemplo de uso
+    users, comments = get_video_comments('AIzaSyBcrB9i03XVofwqyYoN5H0MB58qmNuQ2wA', 'wxjxNE1Ddng')
+
+    # Crear el DataFrame
+    df = pd.DataFrame({'Usuario': users, 'Comentario': comments})
+    df.to_csv('comentarios_video_dross.csv')
+
+
+# Imprimir los nombres de usuarios y comentarios
+# for i, data in enumerate(video_data, start=1):
+    #user = data['user']
+    #comment = data['comment']
+    #print(f"Usuario {i}: {user}\nComentario: {comment}\n")        
+                    </code>
+                </pre>
+                <p>Como podrán observar, configure el API Key proporcionado durante el registro en la API de YouTube como variable global en el script. A su vez, desarrolle una función llamada “get_video_comments(api_key, video_id)” para extraer todos los comentarios del video escogido. 
+                    Esta función a su vez, realizo un proceso de recorrer todos los comentarios paginados del video y almacenarlos en listas separas para usuarios y comentarios. 
+                    Por último, estructure los datos en un DataFrame de pandas y lo guarde en un archivo CSV llamado “comentarios_video_dross.csv”.</p>
+                
+                <h4 class="subrayado">Tercer paso: Creación del DAG en Apache Airflow (dag.py).</h4>
+                <p>Ahora en este paso, cree un script DAG que me permitirá definir y visualizar de manera clara y estructurada el flujo de trabajo que quiero automatizar como administrar. </p>
+                <p>Por ende, en mi script importe las bibliotecas necesarias, como DAG y PythonOperator, para definir tanto mi DAG como las tareas asociadas. </p>
+                <p>Como podrán ver en el código:</p>
+                <pre>
+                    <code>
+from airflow import DAG
+from airflow.operators.python import PythonOperator
+from datetime import datetime, timedelta
+import subprocess
+
+# ...
+
+def ejecutar_script():
+    ruta_script = "/home/didacus7771/proyectos/etl_yt"
+    subprocess.run(["python", ruta_script])
+
+default_args = {
+    'owner': 'tu_nombre',
+    'start_date': datetime(2024, 1, 1),
+    'retries': 1,
+    'retry_delay': timedelta(minutes=5),
+}
+
+dag = DAG(
+    'mi_dag',
+    default_args=default_args,
+    description='Un pipeline simple en Apache Airflow',
+    schedule_interval=timedelta(days=1),
+)
+
+tarea_ejecutar_script = PythonOperator(
+    task_id='ejecutar_script',
+    python_callable=ejecutar_script,
+    dag=dag,
+)
+
+# Otras tareas...
+
+tarea_ejecutar_script  # Asocia la tarea al DAG
+                    </code>
+                </pre>
+                <p>Definí una función llamada “ejecutar_script()” para ejecutar el script de extracción de comentarios. A su vez, configure los argumentos predeterminados del DAG, como el propietario, la fecha de inicio y la programación. También, cree una tarea PythonOperator llamada “tarea_ejecutar_script” para ejecutar la función “ejecutar_script()” como parte del DAG. </p>
+                <p>Por último, programe al DAG para ejecutarse diariamente mediante la definición de un intervalo de programación.</p>
+                <h4 class="subrayado">Cuarto paso: Despliegue del Flujo de Datos con Docker.</h4>
+                <p>Ahora sí, como paso fundamental para realizar la conexión con el host de Apache Airflow, utilice Docker el cual me creo un entorno de ejecución aislado para el proyecto. Es por ello, que cree un archivo Dockerfile para definir la configuración del contenedor. Los códigos que utilice fueron:</p>
+                <pre>
+                    <code>
+                        # Usa una imagen base de Python
+FROM python:3.12.0
+
+# Establece el directorio de trabajo dentro del contenedor
+WORKDIR /home/didacus/projects/etl_yt
+
+# Copia el archivo de requisitos al directorio de trabajo
+COPY requirements.txt .
+
+# Copia todos los archivos al directorio de trabajo
+COPY . .
+
+# Instala las dependencias
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Especifica el comando predeterminado a ejecutar al iniciar el contenedor
+CMD ["python", "yt_etl.py"]
+
+                    </code>
+                </pre>
+                <p>Como se puede observar, especifique la imagen base que estoy utilizando, que en mi caso es una imagen de Python versión 3.12.0. Esta imagen proporciona el entorno necesario para ejecutar nuestro script de extracción de datos y otras dependencias de Python.</p>
+                <p>También establecí el directorio de trabajo dentro del contenedor Docker, donde se copiarán mis archivos y se ejecutará mi script.</p>
+                <p>A su vez se copia el archivo de requisitos (requirements.txt) al directorio de trabajo. Este archivo contiene una lista de todas las bibliotecas de Python necesarias para ejecutar nuestro script, como pandas y google-api-python-client.</p>
+                <p>Además, instalo las dependencias utilizando el comando pip install, que instala todas las bibliotecas especificadas en el archivo requirements.txt en el entorno del contenedor. </p>
+                <p>Ahora sí, creo mi imagen a través del siguiente comando en mi terminal: </p>
+                <img src="images\youtube\pic06.png" alt="y5">
+                <img src="images\youtube\pic07.png" alt="">
+                <h4 class="subrayado">Quinto Paso: Conexión y visualización en Apache Airflow.</h4>
+                <p>Una vez que cree mi imagen de Docker, ahora puedo utilizarlo para ejecutar mi script ETL en un entorno controlado y reproducible. Por consiguiente, continuando en la terminal de Visual Studio Code use el comando Docker run para crear un contenedor a partir de nuestra imagen de Docker:</p>
+                <img src="images\youtube\pic08.png" alt="y6">
+                <p>Verifico que el contenedor se haya creado y que está corriendo:</p>
+                <img src="images\youtube\pic09.png" alt="y7">
+                <p>Como se ve que todo está en orden, en otra terminal de Visual Studio Code voy a ejecutar el comando Airflow Scheduler para iniciar el planificador de Airflow, que se va a encargar de programar y ejecutar mi DAG según mi configuración establecida.</p>
+                <img src="images\youtube\pic10.png" alt="y8">
+                <p>Ahora abro otra terminal, y ejecuto el comando airflow webserver --port 8080 para iniciar el servidor web de Airflow, que proporciona una interfaz de usuario donde podemos monitorear y administrar mi DAG.  </p>
+                <img src="images\youtube\pic11.png" alt="y9">
+                <p>Una vez que el servidor web de Airflow está en funcionamiento, podré acceder a él a través de mi navegador web y verificar que mi DAG esté programado correctamente y que se esté ejecutando según lo previsto.</p>
+                <img src="images\youtube\pic12.png" alt="y10">
+                <img src="images\youtube\pic13.png" alt="">
+                <p>Con esto he completado mi objetivo de automatizar un proceso de ETL de comentarios de YouTube utilizando Apache Airflow y Docker, lo que me facilitó para gestionar y monitorizar el flujo de trabajo de ETL.</p>
+                <p>A continuación les dejo el enlace a la carpeta del proyecto a través del <a href="https://github.com/didacus7771/Proyectos_by_Diego_Robledo/tree/main/etl_yt">siguiente enlace</a>, que está situado en GitHub.</p>
+
+
+<!-- Scripts -->
+<script src="assets/js/jquery.min.js"></script>
+<script src="assets/js/jquery.scrolly.min.js"></script>
+<script src="assets/js/jquery.scrollex.min.js"></script>
+<script src="assets/js/browser.min.js"></script>
+<script src="assets/js/breakpoints.min.js"></script>
+<script src="assets/js/util.js"></script>
+<script src="assets/js/main.js"></script>
+
+</body>
+</html>
