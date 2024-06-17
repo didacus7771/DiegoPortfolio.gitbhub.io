@@ -1,0 +1,240 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Proyecto de Meteorología</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="assets/css/main.css" />
+    <style>
+        /* Estilo para el contenido */
+        #content {
+            max-width: 800px; /* Ancho máximo del contenido */
+            margin: 0 auto; /* Centra horizontalmente */
+            padding: 20px; /* Espaciado interno */
+        }
+        /* Estilo para los títulos */
+        h2, h3 {
+            text-align: center; /* Centra horizontalmente */
+        }
+        /* Estilo para el código */
+        pre {
+            overflow-x: auto; /* Permite desplazamiento horizontal si el contenido excede el ancho */
+            white-space: pre-wrap; /* Rompe las líneas largas de código */
+            word-wrap: break-word; /* Rompe palabras largas */
+            padding: 20px; /* Aumenta el espacio alrededor del código */
+        }
+    </style>
+</head>
+<body>
+
+<!-- Wrapper -->
+<div id="wrapper">
+    <!-- Header -->
+    <header id="header" class="alt">
+        <a href="index.html" class="logo"><strong>Projects</strong> <span>by Diego</span></a>
+    </header>
+
+    <!-- Content -->
+    <div id="content">
+        <!-- Contenido de la sección Meteorología -->
+        <section id="meteorologia">
+            <div class="inner">
+                <header class="major">
+                    <!-- Título secundario centrado -->
+                    <h2 id="secondary-title">Proyecto de Automatización Meteorológica con Apache Airflow y AWS.</h2>
+                </header>
+                <!-- Contenido -->
+                <h3>Introducción</h3>
+                <p>Bienvenidos a la presentación del proyecto de automatización meteorológica, donde he creado un pipeline para obtener y almacenar datos meteorológicos utilizando Apache Airflow y AWS. Este proyecto combina la potencia de la automatización, la obtención de datos en tiempo real y el almacenamiento seguro en la nube.</p>
+                <h3>Objetivo del Proyecto</h3>
+                <p>El objetivo principal es construir una solución eficiente y automatizada que extraiga datos meteorológicos para una ciudad específica a lo largo de varios días, almacenando la información en un archivo CSV local y posteriormente cargándolo en un bucket de AWS S3. Todo esto será gestionado por una DAG (Directed Acyclic Graph o Grafo Acíclico Dirigido).</p>
+                <h3>Pasos del Proyecto</h3>
+                <p><strong>Primer Paso: Extraer Datos</strong><br>En nuestro primer paso voy a extraer datos meteorológicos de la API OpenWeatherMaps para una ciudad específica a lo largo de varios días. La aplicación que use para trabajar en el área de mi proyecto es Ubuntu, y luego haciendo uso de Visual Studio Code, creé un archivo Python bajo el título “weather_etl.py” y coloque el siguiente código:</p>
+                <pre>
+                    <code>
+import requests
+import json
+import pandas as pd
+from datetime import datetime, timedelta
+import boto3
+from botocore.exceptions import NoCredentialsError
+
+def obtener_datos_temperatura(api_key, ciudad, fecha_inicio, dias):
+# Formatear la fecha de inicio en el formato necesario para la API
+    fecha_inicio_str = fecha_inicio.strftime('%Y-%m-%d')     
+
+# Obtener la fecha final sumando los días especificados
+    fecha_fin = fecha_inicio + timedelta(days=dias)
+    fecha_fin_str = fecha_fin.strftime('%Y-%m-%d')
+    
+# Construir la URL de la API para obtener el pronóstico de los próximos días
+    api_url = f'http://api.openweathermap.org/data/2.5/forecast?q={ciudad}&appid={api_key}&start={fecha_inicio_str}&end={fecha_fin_str}&units=metric'  
+
+# Realizar la solicitud a la API
+    response = requests.get(api_url)
+    data = json.loads(response.text)       
+
+# Crear un DataFrame con los datos relevantes
+    df = pd.DataFrame({
+        'Fecha': [registro['dt_txt'] for registro in data['list']],
+        'Temperatura (Celsius)': [registro['main']['temp'] for registro in data['list']],
+    })       
+    return df
+                        
+def guardar_datos_en_csv(df, nombre_archivo):
+    df.to_csv(nombre_archivo, index=False)
+                        
+def cargar_en_s3(archivo_local, nombre_bucket, nombre_objeto):
+    s3 = boto3.client('s3')
+                        
+if __name__ == "__main__":
+    clave_api = 'my_key_api'
+    ciudad_buenos_aires = 'Buenos Aires, AR'
+    fecha_inicio = datetime(2024, 2, 27)  # Establecer la fecha de inicio
+    nombre_archivo_local = 'temperatura_Buenos_Aires.csv'
+    datos_temperatura = obtener_datos_temperatura(clave_api, ciudad_buenos_aires, fecha_inicio, dias=7)
+    guardar_datos_en_csv(datos_temperatura, 'temperatura_Buenos_Aires.csv')
+                        
+# Configura solo el nombre del bucket y del objeto S3
+    nombre_bucket_s3 = 'project-airflow-aws-weather'
+    nombre_objeto_s3 = 'temperatura_Buenos_Aires.csv'
+                        
+    cargar_en_s3(nombre_archivo_local, nombre_bucket_s3, nombre_objeto_s3)
+                        
+
+                    </code>
+                </pre>
+                <p>Como se puede apreciar primero los paquetes que utilice fueron pandas de los cuales importe requests y pd del mismo. También use json, datetime el cual importe datetime y timedelta, y por último paquetes de AWS S3 como boto3 y botocore.exceptions para transferir el CSV al bucket en S3.</p>
+                <p>En resumen, utilicé la API de la página que mencioné al principio para obtener datos meteorológicos de la ciudad de Buenos Aires, Argentina en los próximos cinco días mostrando la temperatura en un lapso de tres horas. Estos datos se filtran y se almacenan en un DataFrame de Pandas, guardándose a su vez en un archivo CSV local bajo el nombre “temperatura_Buenos_Aires.csv”.</p>
+                <!-- Puedes agregar más contenido según lo necesites -->
+                <h3>Segundo Paso: Configurar Apache Airflow en la Instancia de AWS EC2.</h3>
+                <p>Mi objetivo en este paso es configurar Apache Airflow en una instancia de AWS EC2 para automatizar la ejecución del script. Primero creamos la instancia EC2, para ello necesitamos iniciar sesión en AWS (cruz roja) o crear una (cruz azul). </p>
+                <img src="images\metorologia\pic12.jpg" alt="aws_1">
+                <p>Segundo, en la pagina de inicio de la consola ingresamos a EC2. </p>
+                <img src="images\metorologia\pic13.jpg" alt="aws_2">
+                <p>Luego, en esta parte hacemos click en “Instancias (En ejecución)” y luego en “Lanzar instancia”. Una recomendación, es cambiar la región a una mas cercana de donde viven, en mi caso escogí “Sao Pablo”. </p>
+                <img src="images\metorologia\pic14.jpg" alt="aws_3">
+                <p>Ahora para crear la instancia, en “Nombres y etiquetas” agregamos un nombre a preferencia de la instancia. </p>
+                <img src="images\metorologia\pic15.jpg" alt="aws_4">
+                <p>En “Imágenes de aplicaciones y sistemas operativos (Imagen de máquina de Amazon” escogemos Ubuntu dejando como imagen de máquina de Amazon en predeterminada para lanzar la instancia. </p>
+                <img src="images\metorologia\pic16.jpg" alt="aws_5">
+                <p>En “Tipo de instancia” nosotros vamos a especificar el tipo de hardware del equipo host utilizado para la instancia. Este tipo de instancia ofrece distintas características de computación, memoria y almacenamiento. Además cada tipo de instancia obtiene un rendimiento distinto según lo que estemos dispuesto a usar y a su vez hay que pagar. Para dicho proyecto escogí “t2.small” ya que la instancia que aparece como predeterminada no se puede conectar con Apache Airflow. </p>
+                <img src="images\metorologia\pic17.jpg" alt="aws_6">
+                <p>Ahora en “Par de Claves” crearemos un par de claves nuevas colocando un nombre a preferencia</p>
+                <img src="images\metorologia\pic18.jpg" alt="aws_7">
+                <img src="images\metorologia\pic19.jpg" alt="aws_8">
+                <p>Luego hacemos click en “Crear par de claves” y se nos descargar la llave con la cual en un futuro la vamos a necesitar y es por ello que la colocaremos en la carpeta del proyecto. 
+                    Por último, en “Configuraciones de red” seleccionamos lo siguiente: </p>
+                <img src="images\metorologia\pic20.jpg" alt="aws_9">
+                <p>Ahora si, hacemos click en </p>
+                <img src="images\metorologia\pic21.jpg" alt="aws_10">
+                <p>Una vez creada nuestra instancia, vamos a esperar unos minutos hasta que nuestro estado de la instancia este en ejecución y se termine de comprobar, pero mientras tanto vamos a seleccionar la instancia y nos vamos a dirigir a “Seguridad”. </p>
+                <img src="images\metorologia\pic22.jpg.png" alt="aws_11">
+                <p>Dentro de ella, luego hacemos click en el enlace que aparece debajo de “Grupo de seguridad”. Ahora vamos a editar las “Reglas de entrada”. </p>
+                <img src="images\metorologia\pic23.jpg.png" alt="aws_12">
+                <p>Ahí vamos a colocar una nueva regla, y nos debe quedar así: </p>
+                <img src="images\metorologia\pic24.jpg" alt="aws_13">
+                <p>En “Intervalo de puertos” agregamos 8080, y en “Origen” seleccionamos Anywhere-IPv4, luego guardamos la regla y volvemos al principio donde esta nuestra instancia. Una vez que le aparezca de la siguiente forma: </p>
+                <img src="images\metorologia\pic25.jpg" alt="aws_14">
+                <p>Esto quiere indicar que la podemos usar pero antes vamos a crear nuestra DAG.  Para ello use el siguiente código bajo el nombre “weather_dag.py”: </p>
+                <pre>
+                    <code>
+from airflow import DAG
+from airflow.operators.python import PythonOperator
+from datetime import datetime, timedelta
+import requests
+import json
+import pandas as pd
+from datetime import datetime, timedelta
+
+default_args = {
+    'owner': 'didacus',
+    'start_date': datetime(2024, 2, 27),
+    'retries': 1,
+    'retry_delay': timedelta(minutes=5),
+}
+
+def obtener_datos_temperatura(api_key, ciudad, fecha_inicio, dias):
+    fecha_inicio_str = fecha_inicio.strftime('%Y-%m-%d')
+    fecha_fin = fecha_inicio + timedelta(days=dias)
+    fecha_fin_str = fecha_fin.strftime('%Y-%m-%d')
+    api_url = f'http://api.openweathermap.org/data/2.5/forecast?q={ciudad}&appid={api_key}&start={fecha_inicio_str}&end={fecha_fin_str}&units=metric'
+    response = requests.get(api_url)
+    data = json.loads(response.text)
+    df = pd.DataFrame({
+        'Fecha': [registro['dt_txt'] for registro in data['list']],
+        'Temperatura (Celsius)': [registro['main']['temp'] for registro in data['list']],
+    })
+
+    return df
+
+def guardar_datos_en_csv(df, nombre_archivo):
+    df.to_csv(nombre_archivo, index=False)
+
+def ejecutar_script(**kwargs):
+    clave_api = 'my_key_api'
+    ciudad_buenos_aires = 'Buenos Aires, AR'
+    fecha_inicio = datetime(2024, 2, 27)
+    datos_temperatura = obtener_datos_temperatura(clave_api, ciudad_buenos_aires, fecha_inicio, dias=7)
+    guardar_datos_en_csv(datos_temperatura, 'temperatura_Buenos_Aires.csv')
+
+dag = DAG(
+    'mi_dag',
+    default_args=default_args,
+    description='Temperatura de Buenos Aires de los proximos días',
+    schedule_interval=timedelta(days=1),  # Frecuencia de ejecución
+)
+
+ejecutar_script_task = PythonOperator(
+    task_id='ejecutar_script',
+    python_callable=ejecutar_script,
+    provide_context=True,  # Proporciona el contexto para acceder a las variables de la tarea
+    dag=dag,
+)
+
+ejecutar_script_task
+                    </code>
+                </pre>
+                <p>Ahora una vez creada la DAG, lo guarde en la carpeta del proyecto. Ahora volví a la instancia para conectarme e ingresar a la siguiente sección: </p>
+                <img src="images\metorologia\pic28.jpg.png" alt="aws_15">
+                <p>Una vez ahí copie el siguiente enlace e ingrese a Ubuntu desde mi pc, y me dirigí a mi carpeta del proyecto donde está el par de llave que cree, y pegué en la consola lo que copie para luego dar enter. Me salió la siguiente línea de código y me va a conectar con la Instancia en EC2</p>
+                <img src="images\metorologia\pic29.jpg" alt="term_3">
+                <p>Ahora instalé los siguientes componentes: </p>
+                <img src="images\metorologia\pic30.jpg" alt="term_4">
+                <p>Una vez instalado, corremos el código “airflow standalone” el cual nos va a dar nuestro nombre de usuario y contraseña: </p>
+                <img src="images\metorologia\pic31.jpg" alt="term_5">
+                <p>Ahora sí, nos dirigimos a la pestaña de nuestra instancia EC2 y busque copie el siguiente enlace. </p>
+                <img src="images\metorologia\pic32.jpg" alt="aws_16">
+                <p>Copiamos el mismo, y en el navegador pegamos el enlace y al final colocamos “:8080”. Esto nos conectara con Apache Airflow.
+                    Ahora volvemos a Ubuntu y abrimos otra instancia EC2, dentro de ahí me dirigí a la carpeta de Airflow para ver los archivos y carpetas del mismo. Luego ingrese dentro de el archivo de configuración de Airflow con el código “sudo nano airflow.cfg” y modificamos esta línea y luego guardamos presionando “control + X” y después enter. </p>
+                <img src="images\metorologia\pic33.jpg" alt="term_6">
+                <p>Para que quede lo siguiente: </p>
+                <img src="images\metorologia\pic34.jpg.png" alt="term_7">
+                <p>Una vez modificado, creo una carpeta “weather_dag” y dentro de ella creo dos archivos, por un lado “weather_dag.py” y por otro “weather_etl.py”. Después ingresé dentro de esos archivos (como lo hice anteriormente) y coloque en ambos los códigos que use en anterioridad para crear tanto el archivo del paso 1 como el archivo del DAG. </p>
+                <img src="images\metorologia\pic35.jpg" alt="term_8">
+                <img src="images\metorologia\pic36.jpg" alt="term_9">
+                <img src="images\metorologia\pic37.jpg" alt="term_10">
+                <p>Ahora guardamos y salimos presionando “control+X” y “Enter”. Y luego nos dirigimos a la pestaña del navegador de Apache Airflow y vamos a poder ver nuestra DAG, el mío se llama “mi_dag”. Ingreso dentro de él y observare que el flujo de pipeline esta bien, esta estable. </p>
+                <img src="images\metorologia\pic38.jpg" alt="air_1">
+                <img src="images\metorologia\pic39.jpg" alt="air_2">
+                <p>Y con esto he finalizado el proyecto alcanzando mi objetivo que me he propuesto al principio. Por último, la carpeta que contiene tanto los archivos como el pdf que muestra las instrucciones que se mostro en anterioridad pueden ser descargadas de mi github. ¡Saludos cordiales!</p>
+
+                <p>A continuación les dejo el enlace a la carpeta del proyecto a través del <a href="https://github.com/didacus7771/Proyectos_by_Diego_Robledo/tree/main/weather_aws_airflow">siguiente enlace</a>, que está situado en GitHub.</p>
+
+            </div>
+        </section>
+    </div>
+</div>
+
+
+<!-- Scripts -->
+<script src="assets/js/jquery.min.js"></script>
+<script src="assets/js/jquery.scrolly.min.js"></script>
+<script src="assets/js/jquery.scrollex.min.js"></script>
+<script src="assets/js/browser.min.js"></script>
+<script src="assets/js/breakpoints.min.js"></script>
+<script src="assets/js/util.js"></script>
+<script src="assets/js/main.js"></script>
+
+</body>
+</html>

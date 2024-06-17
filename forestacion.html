@@ -1,0 +1,419 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Proyecto de Forestación con Docker-Airbyte-Snowflake</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="assets/css/main.css" />
+    <style>
+        /* Estilo para el contenido */
+        #content {
+            max-width: 800px; /* Ancho máximo del contenido */
+            margin: 0 auto; /* Centra horizontalmente */
+            padding: 20px; /* Espaciado interno */
+        }
+        /* Estilo para los títulos */
+        h2, h3 {
+            text-align: center; /* Centra horizontalmente */
+        }
+        /* Estilo para el código */
+        pre {
+            overflow-x: auto; /* Permite desplazamiento horizontal si el contenido excede el ancho */
+            white-space: pre-wrap; /* Rompe las líneas largas de código */
+            word-wrap: break-word; /* Rompe palabras largas */
+            padding: 20px; /* Aumenta el espacio alrededor del código */
+        }
+        .subrayado {
+            text-decoration:underline;
+        }
+        .negrita {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Wrapper -->
+<div id="wrapper">
+    <!-- Header -->
+    <header id="header" class="alt">
+        <a href="index.html" class="logo"><strong>Projects</strong> <span>by Diego</span></a>
+    </header>
+
+    <!-- Content -->
+    <div id="content">
+        <!-- Contenido de la sección Inflación -->
+        <section id="youtube">
+            <div class="inner">
+                <header class="major">
+                    <!-- Título secundario centrado -->
+                    <h2 id="secondary-title">Proyecto de Forestación con Docker-Airbyte-Snowflake</h2>
+                </header>
+                <!-- Contenido -->
+                <h3>Introducción</h3>
+                <p>En el siguiente proyecto voy a trabajar a partir de un CSV que contiene varios registros sobre la forestación a nivel global. Mi objetivo es desarrollar un proceso de ETL sobre el CSV anteriormente mencionado, para luego una vez modificado, guardar esa nueva información en un nuevo CSV que será puesto en un contenedor a través de Docker y en conjunto con Postgres, crear un database que contenga un schema con una tabla con toda la información de la forestación a nivel global que lo podremos visualizar en Snowflake a través del uso de Airbyte tal como se vio en el proyecto anterior. </p>
+                <h3>Pasos del proyecto</h3>
+                <h4 class="subrayado">Primer paso: realizar el proceso de ETL.</h4>
+                <p>Como primer paso voy a crear una carpeta en donde estará toda la información sobre el desarrollo del proyecto. A su vez haciendo uso del editor de código Visual Studio Code, creo un Jupyter Notebook bajo el nombre “fore_etl.ipynb”.</p>
+                <p>Mi primer paso será crear mi configuración de entorno con las bibliotecas que voy a utilizar y además actualizar mí pip, para ello:</p>
+                <img src="images\forestation\pic01.png" alt="f1">
+                <p>Lo siguiente, voy a cargar el conjunto de datos desde el archivo CSV utilizando pandas:</p>
+                <img src="images\forestation\pic02.png" alt="f2">
+                <p>Una vez que se cargo correctamente voy a empezar con el proceso de ETL. Lo primero será realizar una exploración de datos, luego una transformación y por último lo cargo a un contenedor en Docker.</p>
+                <h5 class="negrita">Exploración de Datos.</h4>
+                <p>Como se hizo en el anterior proyecto, en este paso es visualizar que características presenta mi DataSet y si debo modificar algún elemento. Por ello, lo primero es visualizar mi conjunto de datos a partir de:</p>
+                <img src="images\forestation\pic03.png" alt="f3">
+                <p>Lo siguiente es ver que tipo de dato son las variables del conjunto de datos:</p>
+                <img src="images\forestation\pic04.png" alt="f4">
+                <p>Entonces tenemos dos variables de tipo object, otra de tipo int64 y una de tipo float64.</p>
+                <p>A su vez quiero saber cuantas filas y columnas tengo en mi conjunto de datos:</p>
+                <img src="images\forestation\pic05.png" alt="f5">
+                <p>Entonces en el dataframe tengo 7846 filas y 4 columnas.</p>
+                <p>Ya en lo último de mi exploración de datos, es preguntar sí tengo variables nulas y de ser así, cuantas son, en que columnas se encuentran y de que tipo son. Por ende, primero pregunto lo primero:</p>
+                <img src="images\forestation\pic06.png" alt="f6">
+                <p>Como se observa solo en la columna “Code” hay presente variables nulas. La columna Code como se pudo observar más arriba, son las Tag’s de cada país. Es por ello por lo que ahora quiero ver cuantas variables nulas hay presentes: </p>
+                <img src="images\forestation\pic07.png" alt="">
+                <p>Por consiguiente, tengo presentes 1041 variables nulas. Por último, quiero conocer la naturaleza de los valores nulos: </p>
+                <img src="images\forestation\pic08.png" alt="">
+                <p>Como observamos estos valores nulos deberían representar los "Tag" o abreviatura de los continentes y regiones de estos mismos, por ende este tipo de valor faltante posee la característica MNAR (Missing Not At Random) ya que dichos valores faltantes en el conjunto de datos dependen de los valores faltantes per se. Por consiguiente, no voy a aplicar ninguna acción sobre estos valores nulos.</p>
+                <h5 class="negrita">Transformación</h5>
+                <p>En este Subpaso voy a transformar el CSV original con el fin de cumplir los siguientes objetivos: </p>
+                <img src="images\forestation\pic09.png" alt="">
+                <p class="subrayado">Primer objetivo:  Datos del 2000 al 2020</p>
+                <p>En mi primer objetivo, voy a crear un nuevo DataFrame con datos del 2000 al 2020. Es por ello que escribo el siguiente código </p>
+                <pre>
+                    <code>
+# Nuevo DataFrame con datos del 2000 al 2020
+
+fo_re_1 = fo_re[(fo_re['Year'] >= 2000)]
+                        
+fo_re_1
+                    </code>
+                </pre>
+                <p class="subrayado">Segundo objetivo: Datasets por continentes.</p>
+                <p>En mi segundo paso voy a escribir distintos códigos con el fin de separar los países según su continente. Con esto logro eliminar los valores nulos y a su vez me da mayor facilidad para realizar mi objetivo numero tres. Por ende, los códigos que fueron:</p>
+                <h5 class="negrita">África</h5>
+                <pre>
+                    <code>
+country_afr = [ "Algeria", "Angola", "Benin", "Botswana", "Burkina Faso", "Burundi", "Cabo Verde",
+"Cameroon", "Chad", "Comoros", "Democratic Republic of the Congo", "Djibouti", "Egypt",
+"Equatorial Guinea", "Eritrea", "Eswatini", "Ethiopia", "Gabon", "Gambia", "Ghana",
+"Guinea", "Guinea-Bissau", "Ivory Coast", "Kenya", "Lesotho", "Liberia", "Libya",
+"Madagascar", "Malawi", "Mali", "Mauritania", "Mauritius", "Morocco", "Mozambique",
+"Namibia", "Niger", "Nigeria", "Rwanda", "Sao Tome and Principe", "Senegal", "Seychelles",
+"Sierra Leone", "Somalia", "South Africa", "South Sudan", "Sudan", "Tanzania", "Togo",
+"Tunisia", "Uganda", "Zambia", "Zimbabwe", "North Sudan", "Western Sahara"]
+
+fo_re_afr = fo_re_1[fo_re_1['Entity'].isin(country_afr)]
+
+fo_re_afr
+                      
+                    </code>
+                </pre>
+                <h5 class="negrita">América</h5>
+                <pre>
+                    <code>
+country_amer = ["Canada", "United States","Mexico", "Greenland", "Bermuda", "Saint Pierre and Miquelon","Belize", "Costa Rica", "El Salvador", "Guatemala", "Honduras", "Nicaragua", "Panama", "Antigua and Barbuda", "Bahamas", "Barbados", "Cuba", "Dominica", "Dominican Republic", "Grenada", "Haiti", "Jamaica", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Trinidad and Tobago", "Puerto Rico", "Turks and Caicos Islands", "Cayman Islands", "British Virgin Islands", "United States Virgin Islands", "Anguilla", "Montserrat","Argentina", "Bolivia", "Brazil", "Chile", "Colombia", "Ecuador", "Guyana", "Paraguay", "Peru", "Suriname", "Uruguay", "Venezuela", "French Gui
+
+fo_re_amer = fo_re_1[fo_re_1['Entity'].isin(country_amer)]
+
+fo_re_amer                        
+                    </code>
+                </pre>
+                <h5 class="negrita">Asia</h5>
+                <pre>
+                    <code>
+country_asia = ["Afghanistan", "Armenia", "Azerbaijan", "Bahrain", "Bangladesh", "Bhutan","Brunei", "Cambodia", "China", "Cyprus", "Georgia", "India", "Indonesia","Iran", "Iraq", "Israel", "Japan", "Jordan", "Kazakhstan", "Kuwait","Kyrgyzstan", "Laos", "Lebanon", "Malaysia", "Maldives", "Mongolia","Myanmar", "Nepal", "North Korea", "Oman", "Pakistan", "Palestine","Philippines", "Qatar", "Saudi Arabia", "Singapore", "South Korea","Sri Lanka", "Syria", "Taiwan", "Tajikistan", "Thailand", "Turkmenistan","United Arab Emirates", "Uzbekistan", "Vietnam", "Yemen"]
+
+fo_re_as = fo_re_1[fo_re_1['Entity'].isin(country_asia)]
+                        
+fo_re_as                        
+                    </code>
+                </pre>
+                <h5 class="negrita">Europa</h5>
+                <pre>
+                    <code>
+country_eu = ["Albania", "Andorra", "Armenia", "Austria", "Azerbaijan", "Belarus", "Belgium","Bosnia and Herzegovina", "Bulgaria", "Croatia", "Cyprus", "Czech Republic","Denmark", "Estonia", "Finland", "France", "Georgia", "Germany", "Greece","Hungary", "Iceland", "Ireland", "Italy", "Kazakhstan", "Kosovo", "Latvia", "Liechtenstein", "Lithuania", "Luxembourg", "Malta", "Moldova", "Monaco","Montenegro", "Netherlands", "North Macedonia", "Norway", "Poland", "Portugal", "Romania", "Russia", "San Marino", "Serbia", "Slovakia","Slovenia", "Spain", "Sweden", "Switzerland", "Turkey", "Ukraine", "United Kingdom", "Vatican City", "Faroe Islands", "Gibraltar"]
+
+fo_re_eu = fo_re_1[fo_re_1['Entity'].isin(country_eu)]
+                        
+fo_re_eu
+                        
+                    </code>
+                </pre>
+                <h5 class="negrita">Oceanía</h5>
+                <pre>
+                    <code>
+country_ocean = ["Australia", "Fiji", "Marshall Islands", "Solomon Islands", "Kiribati", "Micronesia", "Nauru", "New Zealand", "Palau", "Papua New Guinea","Samoa", "Tonga", "Tuvalu", "Vanuatu"]
+
+fo_re_oc = fo_re_1[fo_re_1['Entity'].isin(country_ocean)]
+                        
+fo_re_oc                                               
+                    </code>
+                </pre>
+                <p>Con esto finalizamos el objetivo dos.</p>
+                <p class="subrayado">-	Objetivo tres: Agregar una nueva columna, indicando el continente al que pertenece. A su vez guardo el dataframe como CSV.</p>
+                <pre>
+                    <code>
+# A
+fo_re_afr['Continent'] = 'AFR'
+
+df_fo_re_afr = pd.DataFrame(fo_re_afr)
+
+df_fo_re_afr.to_csv('forest_area_afr.csv')
+
+# AMERICA
+
+fo_re_amer['Continent'] = 'AMER'
+
+df_fo_re_amer = pd.DataFrame(fo_re_amer)
+
+df_fo_re_amer.to_csv('forest_area_amer.csv')
+
+# ASIA
+
+fo_re_as['Continent'] = 'AS'
+
+df_fo_re_as = pd.DataFrame(fo_re_as)
+
+df_fo_re_as.to_csv('forest_area_as.csv')
+
+# EUROPA
+
+fo_re_eu['Continent'] = 'EU'
+
+df_fo_re_eu = pd.DataFrame(fo_re_eu)
+
+df_fo_re_eu.to_csv('forest_area_eu.csv')
+
+# OCEANIA
+
+fo_re_oc['Continent'] = 'OC'
+
+df_fo_re_oc = pd.DataFrame(fo_re_oc)
+
+df_fo_re_oc.to_csv('forest_area_oc.csv')
+                        
+                    </code>
+                </pre>
+                <p class="subrayado">-	Cuarto objetivo: Unir esos datasets en uno nuevo.</p>
+                <p>Por último, voy a unir los datasets de cada continente en uno. Para ello utilizo el siguiente código.</p>
+                <pre>
+                    <code>
+# Creo una lista llamada data_frames que contendra todos mis DataFrames creados
+
+data_frames = [df_fo_re_afr, df_fo_re_amer, df_fo_re_as, df_fo_re_eu, df_fo_re_oc]
+
+# Combino todos los DataFrames en uno solo
+
+forest_area_world = pd.concat(data_frames, ignore_index= True)
+
+forest_area_world
+
+                    </code>
+                </pre>
+
+                <h5>Carga</h5>
+                <p>Ya en mi ultimo paso de mi proceso de ETL, mi tarea ahora será guardar el anterior dataframe creado en un CSV que estará ubicado en la carpeta de mi proyecto. Para ello escribimos lo siguiente:</p>
+                <pre>
+                    <code>
+df = pd.DataFrame(forest_area_world)
+df.to_csv('forest_area_world.csv')                        
+                    </code>
+                </pre>
+                <h4 class="subrayado">Segundo paso: desplegar postgres a través de Docker.</h4>
+                <p>En este paso voy a crear el siguiente archivo en la carpeta del proyecto bajo el nombre de “postgres_docker.yml” el cual tendrá las siguientes características:</p>
+                <pre>
+                    <code>
+version: '3.1'
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: forestation_postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: admin
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - /c/Users/roble/Documents/forestation_proyect:/forestation_proyect
+
+volumes:
+  pgdata:
+
+                    </code>
+                </pre>
+                <p>Creo la imagen en mi terminal de Visual Studio Code.</p>
+                <img src="images\forestation\pic10.png" alt="f10">
+                <p>Esto me permitirá iniciar los servicios definidos en el archivo anteriormente mencionado utilizando Docker Compose, y ejecutarlos en segundo plano. Por ende, esto iniciará el contenedor de PostgreSQL definido en el archivo YAML. </p>
+                <p>Ahora nos metemos en Docker y buscamos el contenedor creado. Dentro del mismo utilizo su terminal para conectarme a postgres bajo el comando:</p>
+                <pre>
+                    <code>
+psql -U postgres
+                    </code>
+                </pre>
+                <p>Una vez conectado a postgres, voy a crear un database, entonces escribo:</p>
+                <pre>
+                    <code>
+CREATE DATABASE forestation_global                       
+                    </code>
+                </pre>
+                <p>Una vez creada, me conecto a ella. Para ello ingreso el siguiente código:</p>
+                <pre>
+                    <code>
+\c inflation_global                        
+                    </code>
+                </pre>
+                <p>Una vez dentro del Database, voy a crear la siguiente tabla donde luego voy almacenar la información pertinente. Entonces escribo lo siguiente para crear la tabla:</p>
+                <pre>
+                    <code>
+  CREATE TABLE fores_global (
+    Id SERIAL PRIMARY KEY, 
+    Entity VARCHAR(255),
+    Code VARCHAR(50),
+    Year INT,
+    “Forest Area” NUMERIC,
+    Continent VARCHAR(255)
+);
+
+                    </code>
+                </pre>
+                <p>Ya con mi tabla creada procedo a cargar la información a través del siguiente código:</p>
+                <pre>
+                    <code>
+\COPY fores_global FROM ‘/forestation_proyect/forest_area_world.csv’ DELIMITER ‘,’ CSV HEADER;
+                    </code>
+                </pre>
+                <img src="images\forestation\pic11.png" alt="f11">
+                <p>Con esto terminamos el segundo paso. Ahora voy a configurar mi Snowflake.</p>
+                <h4 class="subrayado">Tercer paso: preparar Snowflake para nuestra conexión con Airbyte.</h4>
+                <p>Como lo hice en el anterior proyecto sobre la inflación, voy a utilizar la herramienta Snowflake para visualizar toda la información de mi ETL en una tabla. Entonces lo primero es ingresar a la pagina principal de <a href="https://www.snowflake.com/es/">Snowflake</a>.</p>
+                <img src="images\inflation\pic31(1).png" alt="f12">
+                <p>Y me registro gratis:</p>
+                <img src="images\inflation\pic32.png" alt="f13">
+                <p>Una vez ingresados los datos y haciendo click en continuar, Snowflake nos enviará un email con varios datos importantes, pero el mas importante que voy a copiar para utilizar mas adelante es el que link que aparece luego de “Dedicated Login URL”. </p>
+                <p>En mi cuenta de Snowflake nos dirigimos al siguiente apartado:</p>
+                <img src="images\inflation\pic34.png" alt="f14">
+                <p>Y sobre el script escribimos el siguiente código: </p>
+                <pre>
+                    <code>
+-- set variables (these need to be uppercase)
+set airbyte_role = 'AIRBYTE_ROLE';
+set airbyte_username = 'AIRBYTE_USER';
+set airbyte_warehouse = 'AIRBYTE_WAREHOUSE';
+set airbyte_database = 'FORESTATION_GLOBAL’;
+set airbyte_schema = 'FORES_GLOBAL';
+
+-- set user password
+set airbyte_password ='YOUR_AIRBYTE_PASSWORD';
+
+begin;
+
+-- create Airbyte role
+use role securityadmin;
+create role if not exists identifier($airbyte_role);
+grant role identifier($airbyte_role) to role SYSADMIN;
+
+-- create Airbyte user
+create user if not exists identifier($airbyte_username)
+password = $airbyte_password
+default_role = $airbyte_role
+default_warehouse = $airbyte_warehouse;
+
+grant role identifier($airbyte_role) to user identifier($airbyte_username);
+
+-- change role to sysadmin for warehouse/database steps
+use role sysadmin;
+
+-- create Airbyte warehouse
+create warehouse if not exists identifier($airbyte_warehouse)
+warehouse_size = xsmall
+warehouse_type = standard
+auto_suspend = 60
+auto_resume = true
+initially_suspended = true;
+
+-- create Airbyte database
+create database if not exists identifier($airbyte_database);
+
+-- grant Airbyte warehouse access
+grant USAGE
+on warehouse identifier($airbyte_warehouse)
+to role identifier($airbyte_role);
+
+-- grant Airbyte database access
+grant OWNERSHIP
+on database identifier($airbyte_database)
+to role identifier($airbyte_role);
+
+commit;
+
+begin;
+
+USE DATABASE identifier($airbyte_database);
+
+-- create schema for Airbyte data
+CREATE SCHEMA IF NOT EXISTS identifier($airbyte_schema);
+
+commit;
+
+begin;
+
+-- grant Airbyte schema access
+grant OWNERSHIP
+on schema identifier($airbyte_schema)
+to role identifier($airbyte_role);
+
+commit;
+       
+                    </code>
+                </pre>
+                <p>Lo único que voy a modificar es la sección de “set airbyte_database”, “set airbyte_schema” y “set airbyte_schema”. Una vez modificado ejecuto el script, y con esto finalizamos el tercer paso.</p>
+                <h4 class="subrayado">Cuarto paso: Conexión con Airbyte.</h4>
+                <p>En el proyecto anterior está muy especificado como conectarme a Airbyte. En resumidas partes, lo primero será entrar en GitHub y desde el lugar de la carpeta de mi proyecto descargo el repositorio siguiente: </p>
+                <pre>
+                    <code>
+git clone --depth=1 https://github.com/airbytehq/airbyte.git
+                    </code>
+                </pre>
+                <p>Una vez que se nos descargue el repositorio, desde GitHub o desde la terminal del Visual Studio Code, me dirijo a la carpeta de Airbyte que descargué.</p>
+                <pre>
+                    <code>
+cd airbyte
+                    </code>
+                </pre>
+                <p>Ahora que estamos en la carpeta de Airbyte, ingreso el siguiente código el cual me va a descargar una serie de archivos Docker como también contenedores para que me pueda ejecutar correctamente la plataforma. Para verificar que los contenedores se hayan descargado nos dirigimos a Docker y en el apartado contenedores nos deben aparecer los contenedores de Airbyte. </p>
+                <p>Ahora me dirijo a Google y escribo http://localhost:8000. Una vez dentro, hago click en el apartado “New connection”</p>
+                <img src="images\inflation\pic38.png" alt="f15">
+                <p>Selecciono “Set up a new source” y busco “postgres”</p>
+                <img src="images\forestation\pic11.png" alt="f16">
+                <p>En las siguientes configuraciones escribo lo siguiente:</p>
+                <img src="images\forestation\airbyte-postgres-1.png" alt="f17">
+                <img src="images\forestation\airbyte-postgres-2.png" alt="f18">
+                <img src="images\forestation\airbyte-postgres-3.png" alt="f19">
+                <p>Ahora que configure mi fuente de datos, voy a seleccionar el destino de mis datos el cual es. En la primera parte deberé ingresar el enlace que Snowflake me envió hace unos pasos atras cuando me registre. Por ende, voy configurarlo de la siguiente manera:</p>
+                <img src="images\forestation\airbyte-snowflake-1.png" alt="f20">
+                <img src="images\forestation\airbyte-snowflake-2.png" alt="f21">
+                <p>Ahora haciendo click en “Test and save” nos tomara unos minutos y se realizara la configuración para Snowflake. Ahora solo me queda configurar la conexión para posteriormente sincronizar los datos de mi Database en Postgres a mi Database en Snowflake. </p>
+                <img src="images\forestation\pic-----.png" alt="f20">
+                <img src="images\forestation\pic------.png" alt="f21">
+                <img src="images\forestation\3pasodefinitivo_3airbyte.png" alt="f22">
+                <p>Una vez que se nos sincronicen los datos, nos dirigimos a Snowflake y en el apartado “Database” y seleccionamos nuestro Database “FORESTATION”.  Dentro del mismo encontraremos nuestro schema “FORES_GLOBAL” y veremos que está cargado la tabla “FORES_GLOBAL” con toda nuestra información subida.</p>
+                <img src="images\forestation\SNOWFLAKEDEFINITIVO.png" alt="f23">
+                <p>La verificación es correcta y con esto cumplí con mi objetivo propuesto al principio. Espero que le hayan gustado ¡Hasta luego!</p>
+                <p>A continuación les dejo el enlace a la carpeta del proyecto a través del <a href="https://github.com/didacus7771/Proyectos_by_Diego_Robledo/tree/main/forestation_proyect">siguiente enlace</a>, que está situado en GitHub.</p>
+
+
+<!-- Scripts -->
+<script src="assets/js/jquery.min.js"></script>
+<script src="assets/js/jquery.scrolly.min.js"></script>
+<script src="assets/js/jquery.scrollex.min.js"></script>
+<script src="assets/js/browser.min.js"></script>
+<script src="assets/js/breakpoints.min.js"></script>
+<script src="assets/js/util.js"></script>
+<script src="assets/js/main.js"></script>
+
+</body>
+</html>
