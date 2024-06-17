@@ -1,0 +1,11 @@
+title: Mi Portafolio
+description: >- # Este es un 'descripción extendida' multiline
+  Portfolio con todos mis proyectos
+baseurl: "" # la URL base, ej. /blog
+url: "https://DiegoRobledoPortfolio.github.io" # la URL de tu sitio
+
+# Configuración de GitHub Pages
+theme: minima
+
+# Build settings
+markdown: kramdown
