@@ -1,0 +1,248 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Proyecto de Pipeline Automatizado Python-Airflow-PostgreSQL</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="assets/css/main.css" />
+    <style>
+        /* Estilo para el contenido */
+        #content {
+            max-width: 800px; /* Ancho máximo del contenido */
+            margin: 0 auto; /* Centra horizontalmente */
+            padding: 20px; /* Espaciado interno */
+        }
+        /* Estilo para los títulos */
+        h2, h3 {
+            text-align: center; /* Centra horizontalmente */
+        }
+        /* Estilo para el código */
+        pre {
+            overflow-x: auto; /* Permite desplazamiento horizontal si el contenido excede el ancho */
+            white-space: pre-wrap; /* Rompe las líneas largas de código */
+            word-wrap: break-word; /* Rompe palabras largas */
+            padding: 20px; /* Aumenta el espacio alrededor del código */
+        }
+        .subrayado {
+            text-decoration:underline;
+        }
+        .negrita {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Wrapper -->
+<div id="wrapper">
+    <!-- Header -->
+    <header id="header" class="alt">
+        <a href="index.html" class="logo"><strong>Projects</strong> <span>by Diego</span></a>
+    </header>
+
+    <!-- Content -->
+    <div id="content">
+        <!-- Contenido de la sección Inflación -->
+        <section id="youtube">
+            <div class="inner">
+                <header class="major">
+                    <!-- Título secundario centrado -->
+                    <h2 id="secondary-title">Pipeline Automatizado con Python-Airflow-PostgreSQL</h2>
+                </header>
+                <!-- Contenido -->
+                 <h3>Objetivo del Proyecto</h3>
+                 <p>Este proyecto tiene como objetivo automatizar la extracción de datos de los videos más vistos en YouTube a nivel global, utilizando la API de YouTube, almacenando los datos en un archivo CSV y que posteriormente, se carguen en una base de datos PostgreSQL a través de Apache Airflow.</p>
+                 <h3>Configuración de la Base de Datos PostgreSQL</h3>
+                 <p>Antes de la creación de mi DAG voy a configurar mi ambiente de trabajo para éxito del proyecto; es por ello que lo primero que voy hacer es instalar PostgreSQL y PGadmin4. Para PostgreSQL:</p>
+                     <pre><code>
+sudo apt update
+sudo apt install postgresql postgresql-contrib
+                     </code></pre>
+                 </div>
+                 <p>Y para PGadmin4</p>
+                     <pre><code>
+curl https://www.pgadmin.org/static/packages_pgadmin_org.pub | sudo apt-key add
+sudo sh -c 'echo "deb https://ftp.postgresql.org/pub/pgadmin/pgadmin4/apt/focal pgadmin4 main" > /etc/apt/sources.list.d/pgadmin4.list && apt update'
+sudo apt install pgadmin4
+                     </code></pre>
+                 <p>Una vez instalado ambos softwares, el siguiente paso es opcional y es que voy a proceder a crear un ambiente virtual con el objetivo de instalar las dependencias necesarias y a su vez Apache Airflow.</p>
+                     <pre><code>
+# Creación del Entorno Virtual
+sudo apt install python3-venv
+python3 -m venv airflow_env
+source airflow_env/bin/activate                        
+                     </code></pre>
+                 <p>También instalo las siguientes dependencias para evitar cualquier tipo de error:</p>
+                     <pre><code>
+pip install pandas sqlalchemy psycopg2 google-api-python-client
+                     </code></pre>
+                 <h3>Configuración de la Base de Datos PostgreSQL</h3>
+                 <p>En esta parte voy a ingresar a la consola de PostgreSQL a través del siguiente codigo:</p>
+                     <pre><code>
+sudo -i -u postgres
+psql                         
+                     </code></pre>
+                 <p>Una vez dentro, creo tanto el usuario como una base de datos</p>
+                     <pre><code>
+CREATE USER airflow_user WITH PASSWORD '12345';
+CREATE DATABASE yt_data;
+GRANT ALL PRIVILEGES ON DATABASE yt_data TO airflow_user;
+
+                     </code></pre>
+                 <p>Procedo a salir del Shell de PostgreSQL:</p>
+                  <pre><code>
+/q
+                  </code></pre>
+                 <h3>Obtención de la API Key de YouTube</h3>  
+                  <p>En esta parte voy a dirigirme al navegador e ingreso en <a href="https://console.cloud.google.com/welcome?organizationId=0">Google Cloud Plataform.</a> Una vez dentro voy a crear o seleccionar un proyecto cualesquiera para habilitar la API de Youtube.</p>
+                   <img src="images/top20/01.png" alt="i01">
+                  <p>Luego me dirigió ahora al menú de navegación a la sección de la izquierda y selecciono “APIs y servicios”.</p>
+                    <img src="images/top20/02.png" alt="i02">
+                  <p>Y hago click en "Habilitar APIS y Servicios"</p>
+                    <img src="images/top20/03_08.png" alt="i03">
+                  <p>En el buscador escribo "YouTube Data API v3" y la habilito</p>
+                    <img src="images/top20/03.png" alt="i03_2">
+                  <p>Por último, hay que crear las credenciales para la API y para ello me dirijo a la parte de "Credenciales", despues ingreso en "Create Credentials para seleccionar mi API Key (es importante que es esa clave la copien en un block de notas para rapido acceso)"</p>
+                  <img src="images/top20/04.png" alt="i04">
+                 <h3>Desarrollo de la DAG</h3>
+                 <p>En este paso opte por desarrollar mi proyecto en un solo DAG para simplificar el mantenimiento como la administración del pipeline. Realizarlo de esta manera permite gestionar y supervisar todo el proceso de principio a fin en un solo lugar, como a su vez, facilitar la depuración y el rastreo de posibles errores o problemas. </p>
+                 <p>Es por ello por lo que mi DAG está dividido en tanto el proceso de ETL como la carga de estos datos en una base de datos en PostgreSQL.  </p>
+                 <p>El código es el siguiente:</p>
+                        <pre><code>
+from airflow import DAG
+from airflow.operators.python import PythonOperator
+from datetime import datetime, timedelta
+import pandas as pd
+from sqlalchemy import create_engine, Table, Column, Integer, String, MetaData, Date
+from googleapiclient.discovery import build
+
+default_args = {
+    'owner': 'airflow',
+    'depends_on_past': False,
+    'start_date': datetime(2024, 7, 15),
+    'email_on_failure': False,
+    'email_on_retry': False,
+    'retries': 1,
+    'retry_delay': timedelta(minutes=5),
+}
+
+dag = DAG(
+    'Project_ytvideos_top2',
+    default_args=default_args,
+    description='Extracción y carga de datos de Youtube a PGadmin4',
+    schedule_interval=timedelta(days=1),
+)
+
+api_key = 'TU_API_KEY_AQUI'
+youtube = build('youtube', 'v3', developerKey=api_key)
+
+def top_videos():
+    request = youtube.videos().list(
+        part='snippet,statistics',
+        chart='mostPopular',
+        maxResults=20
+    )
+    response = request.execute()
+
+    videos = []
+    for item in response['items']:
+        title = item['snippet']['title']
+        views = int(item['statistics']['viewCount'])
+        username = item['snippet']['channelTitle']
+        date = datetime.now().strftime('%Y-%m-%d')
+        videos.append([title, views, username, date])
+    
+    yt_df = pd.DataFrame(videos, columns=['title', 'views', 'username', 'date'])
+    yt_df.to_csv('/home/didacus/projects/yt_top20/CSV/top_videos.csv', index=False)
+
+def load_to_pgadmin():
+    username = 'airflow_user'
+    password = '12345'
+    host = 'localhost'
+    port = '5432'
+    database = 'yt_data'
+
+    connection_string = f'postgresql+psycopg2://{username}:{password}@{host}:{port}/{database}'
+    engine = create_engine(connection_string)
+
+    input_file = '/home/didacus/projects/yt_top20/CSV/top_videos.csv'
+    yt_df = pd.read_csv(input_file)
+
+    metadata = MetaData()
+    top_videos = Table('top_videos', metadata,
+                       Column('index', Integer, primary_key=True, autoincrement=True),
+                       Column('title', String),
+                       Column('views', Integer),
+                       Column('username', String),
+                       Column('date', Date))
+
+    metadata.create_all(engine)
+
+    with engine.connect() as connection:
+        for row in yt_df.itertuples():
+            insert_statement = top_videos.insert().values(title=row.title, views=row.views, username=row.username, date=row.date)
+            connection.execute(insert_statement)
+
+extract_task = PythonOperator(
+    task_id='extract_yt_Data',
+    python_callable=top_videos,
+    dag=dag
+)
+
+load_task = PythonOperator(
+    task_id='load_to_pgadmin',
+    python_callable=load_to_pgadmin,
+    dag=dag,
+)
+
+extract_task >> load_task
+                        
+                    </code></pre>
+                <p>Como se observa lo primero que hago es importar las bibliotecas necesarias y configurar el DAG con parámetros por defecto. </p>
+                <p>Luego en la parte del desarrollo del ETL, cree una función “top_videos” con el fin de en base la API de YouTube Data Api v3 extraer los datos que requiero y guardarlos en un archivo CSV. </p>
+                <p>Después procedí a continuar mi desarrollo de la carga de datos en una base de datos en PostgreSQL, por ende, creando la función “load_to_pgadmin” genere que lea el archivo CSV y posteriormente lo cargue a la base de datos en PostgreSQL.</p>
+                <p>Por último, generé y definí las tareas de extracción y carga en Airflow y establecí su dependencia. </p>
+                <h3>Ejecución del Pipeline</h3>
+                <p>Este DAG que cree anteriormente lo voy a guardar en la carpeta “dags” en la ubicación de Airflow. En mi caso está ubicando en:</p>
+                    <pre><code>
+/home/didacus/airflow/dags/
+                    </code></pre>
+                <p>Una vez guardado mi DAG, vuelvo nuevamente a la consola de Ubuntu y verificando que estoy adentro de mi ambiente virtual, procedo a iniciar Airflow a través de los siguientes dos códigos:</p>
+                    <pre><code>
+airflow scheduler
+airflow webserver
+                    </code></pre>
+                <p>Una vez conectado, me dirijo al navegador de airflow que por lo general es:</p>
+                    <pre><code>
+http://localhost:8080
+                    </code></pre>
+                <p>Ahora estando adentro, ubico mi DAG y la ejecuto. </p>
+                <img src="images/top20/05.png" alt="i05">
+                <p>En caso de que el color del recuadro sea verde, quiere decir que mi pipeline fue generado con éxito. </p>
+                <img src="images/top20/06.png" alt="i06">
+                <p>Queda ahora ingresar a pgAdmin4 para verificar que los datos se cargaron en la base de datos y a su vez me genero automáticamente una tabla con mis datos. Por ende, desde otra consola de Ubuntu ingreso lo siguiente para conectarme:</p>
+                    <pre><code>
+pgadmin4    
+                    </code></pre>
+                <p>Espero unos minutos para ingresar, y una vez adentro verifico la tabla a través de una Querry:</p>
+                    <pre><code>
+SELECT * FROM top_videos;
+                    </code></pre>
+                <img src="images/top20/07.png" alt="i07">
+                <p>Y con esto vemos que los datos fueron cargados la Database en PostgreSQL</p>
+                <h3>Conclusión</h3>
+                <p>Este proyecto muestra como automatizar la extracción, transformación y carga de datos utilizando herramientas modernas como Apache Airflow, PostgreSQL y la API de YouTube. </p>
+            
+
+<!-- Scripts -->
+<script src="script.js"></script>
+<script src="assets/js/jquery.min.js"></script>
+<script src="assets/js/jquery.scrolly.min.js"></script>
+<script src="assets/js/jquery.scrollex.min.js"></script>
+<script src="assets/js/browser.min.js"></script>
+<script src="assets/js/breakpoints.min.js"></script>
+<script src="assets/js/util.js"></script>
+<script src="assets/js/main.js"></script>
+
+</body>
+</html>
