@@ -28,3 +28,23 @@ body {
   background-color: #f1f1f1;
   margin-bottom: 10px;
 }
+
+/* styles.css */
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+.image-container {
+  text-align: center;
+  text-align: left;
+  text-align: right;
+}
+
+.centrada {
+  width: 50%; /* Cambia esto al tamaño deseado */
+  height: auto; /* Mantiene la proporción */
+}
